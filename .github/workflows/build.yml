@@ -6,19 +6,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - name: Unzip and build
+      - name: Build
         run: |
-          unzip -q SportWave-stage1.zip
-          cd SportWave
+          ZIP=$(ls *.zip 2>/dev/null | head -n1 || true)
+          if [ -n "$ZIP" ]; then unzip -q "$ZIP"; fi
+          DIR=$(dirname "$(find . -name settings.gradle.kts -not -path './.git/*' | head -n1)")
+          echo "Project folder: $DIR"
+          cd "$DIR"
           gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: SportWave-debug-apk
-          path: SportWave/app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
